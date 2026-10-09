@@ -11,8 +11,10 @@ CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 cat > "$HTML" <<'EOF'
 <!doctype html><html><head><meta charset="utf-8"><title>Layout sample</title>
 <style>
-@page { size: 6in 9in; margin: 0.75in 0.6in 0.75in 0.75in; }
+@page { size: 6in 9in; margin: 0.75in 0.6in 0.75in 0.75in; @bottom-center { content: counter(page); font: 9pt Georgia, serif; color: #444; } }
+* { box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; }
 html { font-size: BODYPT; }
+html, body { width: 4.65in; }
 body { font-family: Georgia, "Times New Roman", serif; line-height: 1.45; color: #111; margin: 0; }
 h1 { font-size: 20pt; line-height: 1.2; margin: 0 0 18pt; page-break-before: always; }
 h1:first-of-type { page-break-before: auto; }
@@ -23,7 +25,8 @@ p { margin: 0 0 8pt; text-align: left; orphans: 2; widows: 2; }
 ul, ol { margin: 0 0 8pt 1.2em; padding: 0; }
 li { margin-bottom: 3pt; }
 blockquote { border-left: 2pt solid #999; margin: 8pt 0; padding: 4pt 10pt; background: #f4f4f4; page-break-inside: avoid; }
-table { border-collapse: collapse; width: 100%; font-size: 9.5pt; margin: 6pt 0 10pt; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 9.5pt; margin: 6pt 0 10pt; }
+.worksheet td { height: 0.32in; } .worksheet { page-break-before: always; }
 tr, thead { page-break-inside: avoid; } thead { display: table-header-group; }
 h4, p > strong:only-child { page-break-after: avoid; }
 th, td { border: 0.5pt solid #888; padding: 3pt 5pt; vertical-align: top; text-align: left; }
@@ -46,6 +49,7 @@ def grab(m):
     defs.append((m.group(1),m.group(2).strip())); return ''
 md=re.sub(r'^\[\^(\d+)\]:\s*(.+)$',grab,md,flags=re.M)
 md=re.sub(r'\[\^(\d+)\]',r'<sup>\1</sup>',md)
+md=re.sub(r'<!--\s*layout:\s*worksheet\s*-->\s*\n(\|[^\n]*\n(?:\|[^\n]*\n?)+)',lambda m:'<div class="worksheet">\n\n'+m.group(1)+'\n</div>\n',md)
 if defs:
     md+='\n\n<div class="endnotes">\n\n'+'\n'.join(f'{n}. {t}' for n,t in defs)+'\n\n</div>\n'
 print(md)
@@ -55,6 +59,14 @@ echo "</body></html>" >> "$HTML"
 "$CHROME" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="$OUT" "file://$HTML" >/dev/null 2>&1
 PAGES=$(python3 -I -c "import re,sys; d=open(sys.argv[1],'rb').read(); print(len(re.findall(rb'/Type\s*/Page[^s]', d)))" "$OUT")
 WORDS=$(cat "$@" | wc -w | tr -d ' ')
+SCALE=$(python3 -I -c "import re,zlib,sys
+d=open(sys.argv[1],'rb').read(); vals=[]
+for st in re.findall(rb'stream\r?\n(.*?)\r?\nendstream',d,flags=re.S):
+    try: t=zlib.decompress(st)
+    except Exception: continue
+    vals+= [float(a) for a,b in re.findall(rb'([\d.]+) 0 0 ([\d.]+) [\d.\-]+ [\d.\-]+ cm',t)]
+print(round(max(vals)/3.1153083,3) if vals else 'n/a')" "$OUT")
+echo "print scale: $SCALE (1.0 = true size; below 0.99 means content overflowed the page width and Chrome shrank it)"
 echo "pdf: $OUT"
 echo "pages: $PAGES | words: $WORDS | words/page: $(( WORDS / (PAGES>0?PAGES:1) ))"
 rm -rf "$DIR"

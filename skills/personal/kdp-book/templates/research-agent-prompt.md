@@ -7,6 +7,8 @@ Find and report, with a source URL and "as of" date for every fact:
 2. <question>
 ...
 
+Fetch ladder (use in this order, and say which rung you reached for any page you cite): (1) WebFetch; (2) curl from Bash with a browser user agent and -L, stripping tags with python3 -I or sed; (3) the Playwright MCP browser, read-only: load the tools with ToolSearch "select:mcp__playwright__browser_tabs,mcp__playwright__browser_navigate,mcp__playwright__browser_evaluate", open your OWN tab with browser_tabs {action:"new"}, select it before every navigate or evaluate because other agents share the browser, read with evaluate (not snapshots or screenshots), and close your tab when done; (4) only then mark the item Unverified with the reason. Never bypass a captcha or sign in; if a site needs a login the user has not provided, stop at rung 4.
+
 Rules: precision over prose; label secondary sources "(S)"; do not print a number you did not read on a primary page; if a page fails, say so and name the page to fetch. Where a rule changed in the last two years, say what changed and when.
 
 Return a concise Markdown report (<word range>): numbered sections matching the list, bullet facts with [source URL, date], then "Open questions / things that changed recently", then "Numbers that change every year" if relevant. Flag anything unverified.

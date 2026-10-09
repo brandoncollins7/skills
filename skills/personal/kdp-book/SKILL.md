@@ -56,7 +56,7 @@ Ask the user to review the outline or to run an external reviewer. Save the revi
 
 ## Phase 6: fact sheet and fact-check gate
 
-Extract every rule the chapters depend on into a fact sheet (`templates/fact-sheet.md`, status per row). Run parallel verifiers by topic against primary sources only (`templates/fact-check-agent-prompt.md`), merge verdicts, and report "corrections that change the book".
+Extract every rule the chapters depend on into a fact sheet (`templates/fact-sheet.md`, status per row). Run parallel verifiers by topic against primary sources only (`templates/fact-check-agent-prompt.md`), merge verdicts, and report "corrections that change the book". After the merge, run a **transfer check**: compare every sentence marked Established in a chapter prompt against its fact-sheet row and restore any dropped qualification, date, threshold or cap (abbreviating "exempt on the first $500,000, up to $835,000" to "full to $835,000" is the typical error). Then ask the user for a second review of the merged commit before drafting; it will find the worked-example arithmetic the gate cannot.
 
 ## Phase 7: sample layout
 

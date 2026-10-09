@@ -64,7 +64,7 @@ Lay out one chapter with a worksheet, a reference page and a sources page; set p
 
 ## Phase 8: chapters
 
-One agent per chapter with the brief and fact sheet (`templates/chapter-agent-prompt.md`); each returns text, footnotes, `verify_before_print` and `numbers_for_appendix`. Assemble, run humanizer, check cross-references and the fact sheet.
+One agent per chapter with the brief and fact sheet (`templates/chapter-agent-prompt.md`); each returns text, footnotes, `verify_before_print`, `numbers_for_appendix` and a readability block. Draft the first chapter with Opus as the sample that sets voice and layout; lay it out with `scripts/layout-6x9.sh` and measure it with `scripts/readability.py` before commissioning the rest. Then per chapter: plain-language edit, humanizer pass, readability re-check. Assemble, check cross-references and the fact sheet.
 
 ## Phase 9: pre-publication (Gate 4)
 

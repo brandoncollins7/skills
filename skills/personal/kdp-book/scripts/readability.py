@@ -37,6 +37,9 @@ def body_text(md: str) -> str:
             continue
         if s.startswith("|") or re.match(r"^\[\^\d+\]:", s):
             continue
+        s = re.sub(r"<!--.*?-->", "", s)                # HTML comments (layout markers)
+        if not s.strip():
+            continue
         s = re.sub(r"\[\^\d+\]", "", s)              # footnote markers
         s = re.sub(r"!\[[^\]]*\]\([^)]*\)", "", s)    # images
         s = re.sub(r"\[([^\]]+)\]\([^)]*\)", r"\1", s)  # links -> text

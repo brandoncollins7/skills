@@ -26,9 +26,9 @@ p { margin: 0 0 8pt; text-align: left; orphans: 2; widows: 2; }
 ul { margin: 0 0 8pt 1.2em; padding: 0; } ol { margin: 0 0 8pt 1.9em; padding: 0; }
 li { margin-bottom: 3pt; }
 blockquote { border-left: 2pt solid #999; margin: 8pt 0; padding: 4pt 10pt; background: #f4f4f4; page-break-inside: avoid; }
-table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 9.5pt; margin: 6pt 0 10pt; }
-.worksheet td { height: 0.32in; } .worksheet { page-break-before: always; }
-.wide table { font-size: 7.5pt; table-layout: auto; } .wide th, .wide td { padding: 2pt 3pt; hyphens: auto; overflow-wrap: break-word; } .wide tr { page-break-inside: auto; }
+table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 0.864em; margin: 6pt 0 10pt; } /* 9.5pt at 11pt body; scales with BODYPT */
+.worksheet td { height: 0.32in; } .worksheet { page-break-before: always; } .worksheet h2, .worksheet h3, .worksheet h4, .worksheet p { page-break-after: avoid; }
+.wide table { font-size: 0.682em; table-layout: auto; } .wide th, .wide td { padding: 2pt 3pt; hyphens: auto; overflow-wrap: anywhere; } .wide tr { page-break-inside: auto; } /* 7.5pt at 11pt body; "anywhere" keeps min-content inside the page so Chrome never shrinks the whole document */
 tr, thead { page-break-inside: avoid; } thead { display: table-header-group; }
 h4, p > strong:only-child { page-break-after: avoid; }
 th, td { border: 0.5pt solid #888; padding: 3pt 5pt; vertical-align: top; text-align: left; }
@@ -50,8 +50,9 @@ defs=[]
 def grab(m):
     defs.append((m.group(1),m.group(2).strip())); return ''
 md=re.sub(r'^\[\^(\d+)\]:\s*(.+)$',grab,md,flags=re.M)
-md=re.sub(r'\[\^(\d+)\]',r'<sup>\1</sup>',md)
-md=re.sub(r'<!--\s*layout:\s*worksheet\s*-->\s*\n(\|[^\n]*\n(?:\|[^\n]*\n?)+)',lambda m:'<div class="worksheet">\n\n'+m.group(1)+'\n</div>\n',md)
+md=re.sub(r'(?:\[\^\d+\])+',lambda m:'<sup>'+','.join(re.findall(r'\d+',m.group(0)))+'</sup>',md)  # adjacent notes print as 16,28 not 1628
+# A worksheet starts a new page; the heading and the one intro paragraph right before it move with it.
+md=re.sub(r'((?:^#{2,4}[^\n]*\n[ \t]*\n)?(?:^(?![ \t]*(?:\||#|<!--))[^\n]+\n[ \t]*\n)?)<!--\s*layout:\s*worksheet\s*-->[ \t]*\n(?:[ \t]*\n)*((?:\|[^\n]*\n?)+)',lambda m:'<div class="worksheet">\n\n'+m.group(1)+m.group(2)+'\n</div>\n',md,flags=re.M)
 md=re.sub(r'<!--\s*layout:\s*wide-table\s*-->\s*\n(\|[^\n]*\n(?:\|[^\n]*\n?)+)',lambda m:'<div class="wide">\n\n'+m.group(1)+'\n</div>\n',md)
 if defs:
     md+='\n\n<div class="endnotes">\n\n'+'\n'.join(f'{n}. {t}' for n,t in defs)+'\n\n</div>\n'
@@ -62,14 +63,17 @@ echo "</body></html>" >> "$HTML"
 "$CHROME" --headless=new --disable-gpu --no-pdf-header-footer --print-to-pdf="$OUT" "file://$HTML" >/dev/null 2>&1
 PAGES=$(python3 -I -c "import re,sys; d=open(sys.argv[1],'rb').read(); print(len(re.findall(rb'/Type\s*/Page[^s]', d)))" "$OUT")
 WORDS=$(cat "$@" | wc -w | tr -d ' ')
-SCALE=$(python3 -I -c "import re,zlib,sys
-d=open(sys.argv[1],'rb').read(); vals=[]
-for st in re.findall(rb'stream\r?\n(.*?)\r?\nendstream',d,flags=re.S):
-    try: t=zlib.decompress(st)
-    except Exception: continue
-    vals+= [float(a) for a,b in re.findall(rb'([\d.]+) 0 0 ([\d.]+) [\d.\-]+ [\d.\-]+ cm',t)]
-print(round(max(vals)/3.1153083,3) if vals else 'n/a')" "$OUT")
-echo "print scale: $SCALE (1.0 = true size; below 0.99 means content overflowed the page width and Chrome shrank it)"
+SCALE=$(python3 -I -c "import sys,collections
+try: import pymupdf
+except ImportError: print('n/a (pip install pymupdf)'); sys.exit()
+d=pymupdf.open(sys.argv[1]); c=collections.Counter()
+for p in d:
+    for b in p.get_text('dict')['blocks']:
+        for l in b.get('lines',[]):
+            for sp in l['spans']: c[round(sp['size'],2)]+=len(sp['text'])
+tot=sum(c.values()); body=float(sys.argv[2]); common=[k for k,v in c.items() if v>=0.02*tot]
+print(round(min(common,key=lambda k:abs(k-body))/body,3) if common else 'n/a')" "$OUT" "${BODYPT%pt}")
+echo "print scale: $SCALE (common text size nearest BODYPT / BODYPT; 1.0 = true size; below 0.99 means something overflowed the page width and Chrome shrank the whole document)"
 echo "pdf: $OUT"
 echo "pages: $PAGES | words: $WORDS | words/page: $(( WORDS / (PAGES>0?PAGES:1) ))"
 rm -rf "$DIR"

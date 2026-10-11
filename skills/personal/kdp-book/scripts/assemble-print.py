@@ -6,8 +6,9 @@ Usage: python3 -I assemble-print.py <order.txt> <chapters_dir> <out_dir>
 order.txt lists output paths (one per line, relative to the current directory); each is built
 from <chapters_dir>/<basename>. The copy drops every section whose "## " heading is an internal
 output block (a lowercase_snake_case name such as footnotes, source_register, fact_sheet_updates,
-verify_before_print, numbers_for_appendix_b, readability, appendix_c_table) and strips [^n]
-footnote markers. Sources live in Appendix E, so chapter footnotes are not printed.
+verify_before_print, numbers_for_appendix_b, readability, appendix_c_table) and keeps [^n]
+footnote definitions. The [^n] markers are kept (the layout script prints them as superscripts) so
+the numbered list in the print Appendix E matches the chapter text; pass --strip-markers to drop them.
 """
 import os
 import re
@@ -15,10 +16,12 @@ import sys
 
 
 def main() -> int:
-    if len(sys.argv) != 4:
+    args = [a for a in sys.argv[1:] if a != "--strip-markers"]
+    strip = "--strip-markers" in sys.argv
+    if len(args) != 3:
         print(__doc__)
         return 2
-    order, chapters, out_dir = sys.argv[1:4]
+    order, chapters, out_dir = args
     os.makedirs(out_dir, exist_ok=True)
     n = 0
     for rel in (l.strip() for l in open(order, encoding="utf-8")):
@@ -35,7 +38,9 @@ def main() -> int:
                     continue
             if not skip:
                 out.append(line)
-        txt = re.sub(r"\[\^\d+\]", "", "".join(out))
+        txt = "".join(out)
+        if strip:
+            txt = re.sub(r"\[\^\d+\]", "", txt)
         open(os.path.join(out_dir, name), "w", encoding="utf-8").write(txt)
         n += 1
     print(f"assembled {n} files into {out_dir}")

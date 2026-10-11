@@ -28,7 +28,7 @@ li { margin-bottom: 3pt; }
 blockquote { border-left: 2pt solid #999; margin: 8pt 0; padding: 4pt 10pt; background: #f4f4f4; page-break-inside: avoid; }
 table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 9.5pt; margin: 6pt 0 10pt; }
 .worksheet td { height: 0.32in; } .worksheet { page-break-before: always; }
-.wide table { font-size: 8pt; } .wide th, .wide td { padding: 2pt 3pt; hyphens: auto; }
+.wide table { font-size: 7.5pt; table-layout: auto; } .wide th, .wide td { padding: 2pt 3pt; hyphens: auto; overflow-wrap: break-word; } .wide tr { page-break-inside: auto; }
 tr, thead { page-break-inside: avoid; } thead { display: table-header-group; }
 h4, p > strong:only-child { page-break-after: avoid; }
 th, td { border: 0.5pt solid #888; padding: 3pt 5pt; vertical-align: top; text-align: left; }

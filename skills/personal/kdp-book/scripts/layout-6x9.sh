@@ -23,7 +23,7 @@ h2 { font-size: 14pt; margin: 18pt 0 6pt; page-break-after: avoid; }
 h3 { font-size: 11.5pt; margin: 14pt 0 4pt; page-break-after: avoid; }
 h4 { font-size: 10.5pt; margin: 12pt 0 4pt; page-break-after: avoid; }
 p { margin: 0 0 8pt; text-align: left; orphans: 2; widows: 2; }
-ul, ol { margin: 0 0 8pt 1.2em; padding: 0; }
+ul { margin: 0 0 8pt 1.2em; padding: 0; } ol { margin: 0 0 8pt 1.9em; padding: 0; }
 li { margin-bottom: 3pt; }
 blockquote { border-left: 2pt solid #999; margin: 8pt 0; padding: 4pt 10pt; background: #f4f4f4; page-break-inside: avoid; }
 table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 9.5pt; margin: 6pt 0 10pt; }

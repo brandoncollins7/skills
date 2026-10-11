@@ -1,5 +1,6 @@
 #!/bin/bash
 # Lay out one or more Markdown files as a 6x9in paperback PDF with headless Chrome and report the page count.
+# Markers: <!-- layout: worksheet --> (tall rows, new page) and <!-- layout: wide-table --> (8pt, hyphenated) before a table.
 # Usage: layout-6x9.sh <out.pdf> <chapter.md> [more.md ...]
 # Needs: node (npx marked), Google Chrome. No LaTeX, no pandoc.
 set -euo pipefail
@@ -9,7 +10,7 @@ DIR="$(mktemp -d)"
 HTML="$DIR/book.html"
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 cat > "$HTML" <<'EOF'
-<!doctype html><html><head><meta charset="utf-8"><title>Layout sample</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Layout sample</title>
 <style>
 @page { size: 6in 9in; margin: 0.75in 0.6in 0.75in 0.75in; @bottom-center { content: counter(page); font: 9pt Georgia, serif; color: #444; } }
 * { box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; }
@@ -27,6 +28,7 @@ li { margin-bottom: 3pt; }
 blockquote { border-left: 2pt solid #999; margin: 8pt 0; padding: 4pt 10pt; background: #f4f4f4; page-break-inside: avoid; }
 table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 9.5pt; margin: 6pt 0 10pt; }
 .worksheet td { height: 0.32in; } .worksheet { page-break-before: always; }
+.wide table { font-size: 8pt; } .wide th, .wide td { padding: 2pt 3pt; hyphens: auto; }
 tr, thead { page-break-inside: avoid; } thead { display: table-header-group; }
 h4, p > strong:only-child { page-break-after: avoid; }
 th, td { border: 0.5pt solid #888; padding: 3pt 5pt; vertical-align: top; text-align: left; }
@@ -50,6 +52,7 @@ def grab(m):
 md=re.sub(r'^\[\^(\d+)\]:\s*(.+)$',grab,md,flags=re.M)
 md=re.sub(r'\[\^(\d+)\]',r'<sup>\1</sup>',md)
 md=re.sub(r'<!--\s*layout:\s*worksheet\s*-->\s*\n(\|[^\n]*\n(?:\|[^\n]*\n?)+)',lambda m:'<div class="worksheet">\n\n'+m.group(1)+'\n</div>\n',md)
+md=re.sub(r'<!--\s*layout:\s*wide-table\s*-->\s*\n(\|[^\n]*\n(?:\|[^\n]*\n?)+)',lambda m:'<div class="wide">\n\n'+m.group(1)+'\n</div>\n',md)
 if defs:
     md+='\n\n<div class="endnotes">\n\n'+'\n'.join(f'{n}. {t}' for n,t in defs)+'\n\n</div>\n'
 print(md)

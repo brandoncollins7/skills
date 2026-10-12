@@ -28,9 +28,9 @@ li { margin-bottom: 3pt; }
 blockquote { border-left: 2pt solid #999; margin: 8pt 0; padding: 4pt 10pt; background: #f4f4f4; page-break-inside: avoid; }
 table { border-collapse: collapse; width: 100%; table-layout: fixed; font-size: 0.864em; margin: 6pt 0 10pt; } /* 9.5pt at 11pt body; scales with BODYPT */
 .worksheet td { height: 0.32in; } .worksheet { page-break-before: always; } .worksheet h2, .worksheet h3, .worksheet h4, .worksheet p { page-break-after: avoid; }
-.wide table { font-size: 0.682em; table-layout: auto; } .wide th, .wide td { padding: 2pt 3pt; hyphens: auto; overflow-wrap: anywhere; } .wide tr { page-break-inside: auto; } /* 7.5pt at 11pt body; "anywhere" keeps min-content inside the page so Chrome never shrinks the whole document */
+.wide table { font-size: 0.682em; table-layout: auto; } .wide th, .wide td { padding: 2pt 3pt; hyphens: auto; overflow-wrap: anywhere; } .wide tr { page-break-inside: avoid; } .wide th:first-child, .wide td:first-child { min-width: 0.8in; } /* 7.5pt at 11pt body; "anywhere" keeps min-content inside the page so Chrome never shrinks the whole document */
 tr, thead { page-break-inside: avoid; } thead { display: table-header-group; }
-h4, p > strong:only-child { page-break-after: avoid; }
+h4, p > strong:only-child, h2 + p, h3 + p { page-break-after: avoid; }
 th, td { border: 0.5pt solid #888; padding: 3pt 5pt; vertical-align: top; text-align: left; }
 th { background: #eee; }
 code { font-family: Menlo, monospace; font-size: 9.5pt; }

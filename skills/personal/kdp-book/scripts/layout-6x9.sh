@@ -13,6 +13,8 @@ cat > "$HTML" <<'EOF'
 <!doctype html><html lang="en"><head><meta charset="utf-8"><title>Layout sample</title>
 <style>
 @page { size: 6in 9in; margin: 0.75in 0.6in 0.75in 0.75in; @bottom-center { content: counter(page); font: 9pt Georgia, serif; color: #444; } }
+/* KDP gutter: books over 400 pages need at least 0.625in on the inside edge; mirror the margins so the wide one is always inside */
+@page :right { margin: 0.75in 0.6in 0.75in 0.75in; } @page :left { margin: 0.75in 0.75in 0.75in 0.6in; }
 * { box-sizing: border-box; max-width: 100%; overflow-wrap: anywhere; }
 html { font-size: BODYPT; }
 html, body { width: 4.65in; }

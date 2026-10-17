@@ -1,4 +1,4 @@
-# Chapter agent prompt (one per chapter; model sonnet, or opus for the product-recommendation and legal chapters)
+# Chapter agent prompt (one per chapter; model sonnet; the Opus advisor reviews every draft, line by line for the product-recommendation, legal and tax-heavy chapters)
 
 <Paste the Shared writer brief and the Shared fact sheet from the outline above this line.>
 

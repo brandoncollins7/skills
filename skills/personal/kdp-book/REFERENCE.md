@@ -45,7 +45,7 @@ A rank taken within three weeks of launch may be a promo spike; re-check at 30 d
 
 ## Editorial review loop
 
-Ask the user for a review (or they run one externally); save it under `reviews/`; have an Opus editor apply it in place and write a change log listing each point and what changed or was declined and why. Then ask the user the decisions the review raised, one at a time, in plain language, with a recommendation.
+Ask the user for a review (or they run one externally); save it under `reviews/`; have a Sonnet editor apply it in place (the Opus advisor decides contested points first and checks the log after) and write a change log listing each point and what changed or was declined and why. Then ask the user the decisions the review raised, one at a time, in plain language, with a recommendation.
 
 ## Fact sheet and fact-check gate
 
@@ -82,7 +82,7 @@ Prepend the shared writer brief and the fact sheet to each chapter prompt. Outpu
 - **Budget words from the total, not per chapter.** Chapter ranges that each looked right summed to 48,600 words against a 40,000 budget. Set the total first, divide it, and give each prompt a hard upper bound.
 - **A good brief makes the polish pass light.** With the plain-language standard in the writer brief and the readability script run by each drafter, the later plain-language and humanizer passes changed 4–13 sentences per chapter and moved no score outside target.
 - **Expect a cross-chapter consistency pass to find about ten items** even with canonical character blocks: a chapter written early carried figures the story later changed (benefit income), chapters ordered the same accounts differently, one chapter printed fact-sheet IDs in prose, a date fell on a Sunday. Run the pass after all drafts exist and before the polish passes, and have the closing chapter's agent list every disagreement it meets, since it reads everything.
-- **Drafting surfaces new rules.** Nineteen chapter agents grew the fact sheet from 113 to 201 rows and settled seven conflicts. Merge each chapter's `fact_sheet_updates` promptly (an Opus editor resumed by SendMessage keeps the outline in context), and expect worked examples to change the story: child benefits turned a "cut the remittance" plot into "the rule never fired", and a stress test ruled a character out of the condo she was supposed to buy.
+- **Drafting surfaces new rules.** Nineteen chapter agents grew the fact sheet from 113 to 201 rows and settled seven conflicts. Merge each chapter's `fact_sheet_updates` promptly (a Sonnet editor resumed by SendMessage, with the advisor checking each merge, keeps the outline in context), and expect worked examples to change the story: child benefits turned a "cut the remittance" plot into "the rule never fired", and a stress test ruled a character out of the condo she was supposed to buy.
 - **Shared Playwright browser contention is real.** Agents navigated or closed each other's tabs. Tell every agent to create its own tab and re-select it before each action, keep batches small, and expect a few rung-3 reads to be lost.
 - **Resuming beats relaunching.** Four agents killed by a rate limit were resumed with SendMessage and finished with their research intact; a fresh launch would have repeated it.
 - **The closing chapter, opening pages and appendices come last** and compile from the chapters' output blocks (terms defined → glossary; numbers → Appendix B; footnotes → Appendix E), so the output-block discipline in the brief pays for itself.

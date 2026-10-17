@@ -66,6 +66,7 @@ def sentences(text: str):
     # Protect common abbreviations and decimals before splitting.
     t = re.sub(r"\b(e\.g|i\.e|vs|Mr|Mrs|Ms|Dr|No|St)\.", lambda m: m.group(0).replace(".", "§"), text)
     t = re.sub(r"(\d)\.(\d)", r"\1§\2", t)
+    t = re.sub(r"([.!?])([\"”’'])", r"\2\1", t)   # a stop inside a closing quotation mark still ends the sentence
     parts = re.split(r"(?<=[.!?])\s+(?=[A-Z0-9\"“(])", t)
     return [p.replace("§", ".").strip() for p in parts if re.search(r"[A-Za-z]", p)]
 

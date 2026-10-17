@@ -5,22 +5,25 @@ description: Run the end-to-end pipeline for a nonfiction book on Amazon KDP, fr
 
 # KDP book pipeline
 
-Nine phases, four user gates. Never skip a gate: the user decides niche, title, review changes and publication. Every phase writes to the project folder and the vault note; every number carries its source and date.
+Nine phases, four user gates plus a review after the outline and after every chapter. Never skip a gate or a review: the user decides niche, title, the outline, each chapter, review changes and publication. Every phase writes to the project folder and the vault note; every number carries its source and date.
 
-## Delegation: who does what
+## Delegation: Sonnet agents, Opus advisor
 
-The main session is the advisor and orchestrator: it runs the gates, gives the recommendation at each decision, merges results and holds the whole picture. That role wants the strongest model available (Fable, or Opus). If the session is running on Sonnet, send the orchestration-heavy steps (niche ranking and rationale, merging research into the outline, merging fact-check verdicts, the advice at each gate) to an Opus subagent and relay its answer. Everything heavy goes to subagents via the Agent tool (`subagent_type: general-purpose`, set `model` explicitly), launched in parallel in one message whenever the pieces are independent.
+Every subagent runs on Sonnet (Agent tool, `subagent_type: general-purpose`, `model: sonnet` set explicitly). Opus is the advisor: it plans, briefs, reviews and decides, and does not draft. The main session is the advisor when it runs on Opus (or Fable). If the main session runs on anything else, launch one advisor subagent with `model: opus` for each advisor task below and relay its answer; keep it alive with SendMessage so it holds the whole book.
 
-| Step | Model | Why |
+| Step | Sonnet agent does | Opus advisor does |
 |---|---|---|
-| Topic research slices, competitor and review mining, Reddit pass | sonnet, 4–6 in parallel | Fetch-and-cite work; speed and cost |
-| Fact-check verifiers | sonnet, one per topic group | Quote-the-rule work; parallel |
-| Chapter drafts | sonnet, one per chapter | Brief plus fact sheet carry the quality |
-| Outline author, editor applying a review, cast and structure changes | opus | Judgment across the whole book |
-| Product-recommendation, legal, cross-border and tax-heavy chapters | opus | Highest error cost |
-| Merge of fact-check verdicts, final consistency pass, book-level synthesis | opus (or main session) | Needs the whole picture |
+| Niche shelf checks, topic research, competitor and review mining, Reddit pass | Fetches, extracts and cites; 4–6 in parallel | Picks the slices, ranks the niches, writes the gate recommendation |
+| Outline | Drafts it from the advisor's brief (cast, timeline, chapter list, evidence map) | Writes the brief, then reviews the draft for structure, one home per explanation and evidence gaps |
+| Editor applying a review | Applies each point and writes the change log | Decides contested points before the edit; checks the change log after |
+| Fact-check | One verifier per topic group | Merges verdicts, runs the transfer check, lists corrections that change the book |
+| Chapter draft | One agent per chapter, on the user's instruction | Writes the chapter brief; reviews the draft before the user sees it |
+| Product-recommendation, legal, cross-border and tax-heavy chapters | Drafts as usual | Line-by-line review of every rule, number and qualification against the fact sheet |
+| Consistency pass, assembly, book-level synthesis | Mechanical checks and edits | Final read across chapters and the call on what goes to the user |
 
-Rules: give every agent its output file path and a return format; never let two agents share the Playwright browser; resume an agent that already holds the context with SendMessage (the editor, a researcher being corrected) instead of starting cold; the main session never writes chapters itself.
+**Advisor review loop.** For any step with an advisor review, the Sonnet agent returns its output; the advisor reviews it against the brief and the fact sheet and sends corrections back to the same agent with SendMessage (not a fresh launch); the agent fixes and returns. At most two rounds, then the advisor flags what is left for the user. The advisor states its verdict in the hand-off: what it checked, what it changed, what it could not settle.
+
+Rules: give every agent its output file path and a return format; never let two agents share the Playwright browser; resume an agent that already holds the context with SendMessage (the editor, a researcher being corrected) instead of starting cold; neither the main session nor the advisor writes chapters itself.
 
 ## Setup (once per book)
 
@@ -52,11 +55,11 @@ Four to six topic slices, each returning a cited report with an "unverified" lis
 
 ## Phase 5: editorial review (Gate 3)
 
-Ask the user to review the outline or to run an external reviewer. Save the review in `reviews/`, apply it with an Opus editor that writes a change log, then **Gate 3:** put scope, format, cast and any corrections to the user as explicit decisions.
+**Stop here and wait for the user's own review of the outline.** Answers to a few decision questions are not a review; do not move to Phase 6 until the user has read the outline (or run their external reviewer on it) and sent comments or an explicit "approved". Save the review in `reviews/`, apply it with a Sonnet editor that writes a change log, with the advisor deciding contested points and checking the log, then **Gate 3:** put scope, format, cast and any corrections to the user as explicit decisions.
 
 ## Phase 6: fact sheet and fact-check gate
 
-Extract every rule the chapters depend on into a fact sheet (`templates/fact-sheet.md`, status per row). Run parallel verifiers by topic against primary sources only (`templates/fact-check-agent-prompt.md`), merge verdicts, and report "corrections that change the book". After the merge, run a **transfer check**: compare every sentence marked Established in a chapter prompt against its fact-sheet row and restore any dropped qualification, date, threshold or cap (abbreviating "exempt on the first $500,000, up to $835,000" to "full to $835,000" is the typical error). Then ask the user for a second review of the merged commit before drafting; it will find the worked-example arithmetic the gate cannot.
+Extract every rule the chapters depend on into a fact sheet (`templates/fact-sheet.md`, status per row). Run parallel Sonnet verifiers by topic against primary sources only (`templates/fact-check-agent-prompt.md`); the advisor merges verdicts and report "corrections that change the book". After the merge, run a **transfer check**: compare every sentence marked Established in a chapter prompt against its fact-sheet row and restore any dropped qualification, date, threshold or cap (abbreviating "exempt on the first $500,000, up to $835,000" to "full to $835,000" is the typical error). Then ask the user for a second review of the merged commit before drafting; it will find the worked-example arithmetic the gate cannot.
 
 ## Phase 7: sample layout
 
@@ -64,7 +67,7 @@ Lay out one chapter with a worksheet, a reference page and a sources page; set p
 
 ## Phase 8: chapters
 
-One agent per chapter with the brief and fact sheet (`templates/chapter-agent-prompt.md`); each returns text, footnotes, `verify_before_print`, `numbers_for_appendix` and a readability block. Draft the first chapter with Opus as the sample that sets voice and layout; lay it out with `scripts/layout-6x9.sh` and measure it with `scripts/readability.py` before commissioning the rest. Then per chapter: plain-language edit, humanizer pass, readability re-check. Assemble with `scripts/assemble-print.py` (drops the internal output blocks and footnote markers; sources print from Appendix E), check cross-references and the fact sheet.
+**One chapter at a time, on the user's instruction, with the user's review after each.** The user says which chapter to write next; one Sonnet agent drafts it with the brief and fact sheet (`templates/chapter-agent-prompt.md`), returning text, footnotes, `verify_before_print`, `numbers_for_appendix` and a readability block; run the plain-language edit, humanizer pass and readability re-check on that chapter; then the advisor reviews it (advisor review loop) and only then hands it to the user and waits. Apply the user's review through an editor with a change log before asking which chapter comes next. Never commission several chapters in parallel unless the user asks for that. The first chapter is the sample that sets voice and layout: the advisor writes its brief in full and reviews the draft closely; lay it out with `scripts/layout-6x9.sh` (or the book's own layout script) and measure it with `scripts/readability.py` before the user reviews it. Assemble with `scripts/assemble-print.py` (drops the internal output blocks and footnote markers; sources print from Appendix E), check cross-references and the fact sheet.
 
 ## Phase 9: pre-publication (Gate 4)
 

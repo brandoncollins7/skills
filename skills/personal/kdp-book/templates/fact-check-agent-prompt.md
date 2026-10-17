@@ -1,4 +1,4 @@
-# Fact-check agent prompt (one per topic group; run in parallel, model sonnet; only one may use the browser)
+# Fact-check agent prompt (one per topic group; run in parallel, model sonnet; only one may use the browser; the Opus advisor merges the verdicts)
 
 You are running the fact-check gate for <book>. Today is <date>. Read `<project>/fact-sheet.md`. Your assignment is rows **<IDs>**. Verify each against PRIMARY sources only (<authorities for this domain>). Secondary sources may locate the page but are never the authority.
 
